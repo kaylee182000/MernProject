@@ -25,8 +25,8 @@ function App() {
           {isLoading && <h1>Waiting</h1>}
           {!isLoading &&
             note?.length > 0 &&
-            note?.map((item: Note, index: number) => {
-              return <CardNote {...item} key={index} />;
+            note?.map((item, index) => {
+              return <CardNote data={item} key={index} />;
             })}
         </div>
       </header>

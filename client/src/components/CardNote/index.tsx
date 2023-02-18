@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Note } from "../../models/notes";
 
-export default function CardNote( data: Note ) {
+interface Data {
+  data: Note;
+}
+
+export default function CardNote({data}: Data) {
   return (
     <div className="content col-6">
       <div className="header">
