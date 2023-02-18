@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import logo from "./logo.svg";
 import "./App.css";
 import { Note } from "./models/notes";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import CardNote from "./components/CardNote";
 
 function App() {
   const [note, setNote] = useState<Note[]>([]);
@@ -13,16 +14,21 @@ function App() {
   };
   const { isLoading, error, data, isFetching } = useQuery(["notes"], fetchNote);
 
+  useEffect(() => {
+    setNote(data);
+  }, [isFetching]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <ul>
+    <div>
+      <header>
+        <div className="row">
           {isLoading && <h1>Waiting</h1>}
           {!isLoading &&
-            data.map((item: any, index: number) => {
-              return <li key={index}>{item.title}</li>;
+            note?.length > 0 &&
+            note?.map((item: Note, index: number) => {
+              return <CardNote {...item} key={index} />;
             })}
-        </ul>
+        </div>
       </header>
     </div>
   );
