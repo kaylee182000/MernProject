@@ -1,37 +1,82 @@
-import React, { useState, useEffect } from "react";
-import logo from "./logo.svg";
-import "./App.css";
-import { Note } from "./models/notes";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import CardNote from "./components/CardNote";
+import { useEffect, useState } from 'react';
+import { Container } from 'react-bootstrap';
+import { Route, Routes } from 'react-router';
+import { BrowserRouter } from 'react-router-dom';
+import LoginModal from './components/LoginModal';
+import NavBar from './components/NavBar';
+import SignUpModal from './components/SignUpModal';
+import { User } from './models/user';
+import * as NotesApi from "./network/notes_api";
+import NotesPage from './pages/NotesPage';
+import NotFoundPage from './pages/NotFoundPage';
+import PrivacyPage from './pages/PrivacyPage';
+import styles from "./styles/App.module.css";
 
 function App() {
-  const [note, setNote] = useState<Note[]>([]);
-  const fetchNote = async () => {
-    const res = await axios.get("http://localhost:5000/api/notes");
-    return res.data;
-  };
-  const { isLoading, error, data, isFetching } = useQuery(["notes"], fetchNote);
 
-  useEffect(() => {
-    setNote(data);
-  }, [isFetching]);
+	const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
 
-  return (
-    <div>
-      <header>
-        <div className="row">
-          {isLoading && <h1>Waiting</h1>}
-          {!isLoading &&
-            note?.length > 0 &&
-            note?.map((item, index) => {
-              return <CardNote data={item} key={index} />;
-            })}
-        </div>
-      </header>
-    </div>
-  );
+	const [showSignUpModal, setShowSignUpModal] = useState(false);
+	const [showLoginModal, setShowLoginModal] = useState(false);
+
+	useEffect(() => {
+		async function fetchLoggedInUser() {
+			try {
+				const user = await NotesApi.getLoggedInUser();
+				setLoggedInUser(user);
+			} catch (error) {
+				console.error(error);
+			}
+		}
+		fetchLoggedInUser();
+	}, []);
+
+	return (
+		<BrowserRouter>
+			<div>
+				<NavBar
+					loggedInUser={loggedInUser}
+					onLoginClicked={() => setShowLoginModal(true)}
+					onSignUpClicked={() => setShowSignUpModal(true)}
+					onLogoutSuccessful={() => setLoggedInUser(null)}
+				/>
+				<Container className={styles.pageContainer}>
+					<Routes>
+						<Route
+							path='/'
+							element={<NotesPage loggedInUser={loggedInUser} />}
+						/>
+						<Route
+							path='/privacy'
+							element={<PrivacyPage />}
+						/>
+						<Route
+							path='/*'
+							element={<NotFoundPage />}
+						/>
+					</Routes>
+				</Container>
+				{showSignUpModal &&
+					<SignUpModal
+						onDismiss={() => setShowSignUpModal(false)}
+						onSignUpSuccessful={(user) => {
+							setLoggedInUser(user);
+							setShowSignUpModal(false);
+						}}
+					/>
+				}
+				{showLoginModal &&
+					<LoginModal
+						onDismiss={() => setShowLoginModal(false)}
+						onLoginSuccessful={(user) => {
+							setLoggedInUser(user);
+							setShowLoginModal(false);
+						}}
+					/>
+				}
+			</div>
+		</BrowserRouter>
+	);
 }
 
 export default App;
