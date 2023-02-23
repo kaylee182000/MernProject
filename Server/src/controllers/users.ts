@@ -5,10 +5,15 @@ import UserModel from "../models/user";
 
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
   try {
-      const user = await UserModel.findById(req.session.userId).select("+email").exec();
-      res.status(200).json(user);
+    if (!req.session.userId) {
+      throw createHttpError(401, "User not authenticated");
+    }
+    const user = await UserModel.findById(req.session.userId)
+      .select("+email")
+      .exec();
+    res.status(200).json(user);
   } catch (error) {
-      next(error);
+    next(error);
   }
 };
 
@@ -94,4 +99,14 @@ export const signIn: RequestHandler<
   } catch (error) {
     next(error);
   }
+};
+
+export const logOut: RequestHandler = (req, res, next) => {
+  req.session.destroy((err) => {
+    if (err) {
+      next(err);
+    } else {
+      res.sendStatus(200);
+    }
+  });
 };
